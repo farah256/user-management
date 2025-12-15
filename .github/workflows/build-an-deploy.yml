@@ -6,35 +6,42 @@ on:
 
 jobs:
   sonar:
-    runs-on: self-hosted
+    runs-on: macos-latest  # Changed to macOS runner
 
     steps:
       # 1️⃣ Checkout du code
       - uses: actions/checkout@v4
         with:
-          submodules: false   # Désactive les sous-modules pour éviter les erreurs
+          submodules: false
 
       # 2️⃣ Setup JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: 21
-          distribution: zulu
+          distribution: 'zulu'  # or 'temurin' for macOS
 
-      # 3️⃣ Build & SonarQube Analysis
+      # 3️⃣ Install Maven (if not already available)
+      - name: Setup Maven
+        uses: stCarolas/setup-maven@v4
+        with:
+          maven-version: '3.9.6'
+
+      # 4️⃣ Build & SonarQube Analysis (using bash for macOS)
       - name: Build & SonarQube Analysis
-        shell: powershell
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: http://localhost:9000
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || 'http://localhost:9000' }}
         run: |
-          # Débogage : afficher l'URL utilisée
-          $sonarUrl = $env:SONAR_HOST_URL
-          $sonarToken = $env:SONAR_TOKEN
-          Write-Host "Using SonarQube URL: $sonarUrl"
-
-          # Lancer Maven avec les options correctement évaluées
-          mvn clean verify sonar:sonar `
-            -D"sonar.projectKey=TP_SonarQube" `
-            -D"sonar.host.url=$sonarUrl" `
-            -D"sonar.login=$sonarToken"
+          # Debug: show URL and environment
+          echo "Using SonarQube URL: $SONAR_HOST_URL"
+          echo "Java version:"
+          java -version
+          echo "Maven version:"
+          mvn --version
+          
+          # Run Maven with Sonar analysis
+          mvn clean verify sonar:sonar \
+            -Dsonar.projectKey=TP_SonarQube \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
