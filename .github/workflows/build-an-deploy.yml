@@ -23,7 +23,7 @@ jobs:
 
       # 3️⃣ Install Maven (if not already available)
       - name: Setup Maven
-        uses: stCarolas/setup-maven@v4
+        uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.9.6'
 
